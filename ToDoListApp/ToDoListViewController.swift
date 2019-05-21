@@ -12,7 +12,7 @@ class ToDoListViewController: UITableViewController {
 
     
     
-    let itemArray = ["First", "Second", "Third"]
+    var itemArray = ["First", "Second", "Third"]
     
     
     override func viewDidLoad() {
@@ -65,6 +65,35 @@ class ToDoListViewController: UITableViewController {
     // MARK:- When table view cell gets deselected
     
     
-
+    // MARK:- Functions when add button is pressed
+    @IBAction func addButtonPressed(_ sender: Any) {
+        
+        var textStringToBeAppended = UITextField()
+        
+        var alert = UIAlertController(title: "Add New Items", message: "Enter new items to be added", preferredStyle: .alert)
+        
+        var action = UIAlertAction(title: "Add items", style: .default){ (a) in
+            print("Successs button is working!")
+            
+            self.itemArray.append(textStringToBeAppended.text!)
+            self.tableView.reloadData()
+            
+        }
+        var cancelButton = UIAlertAction(title: "Cancel", style: .cancel) { (cancel) in
+            
+        }
+        
+        
+        alert.addTextField { (textField) in
+            textStringToBeAppended = textField
+            textField.placeholder = "Name of Item"
+            print("\(textField.text!)")
+        }
+        
+        alert.addAction(action)
+        alert.addAction(cancelButton)
+        present(alert, animated: true, completion: nil)
+        
+    }
 }
 
