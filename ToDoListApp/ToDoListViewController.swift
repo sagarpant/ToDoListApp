@@ -13,11 +13,17 @@ class ToDoListViewController: UITableViewController {
     
     
     var itemArray = ["First", "Second", "Third"]
+    let defaults = UserDefaults.standard
     
     
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
+        
+        if let items = defaults.array(forKey: "ToDoListArray") as? [String] {
+            itemArray = items
+        }
+        
     }
 
     
@@ -76,6 +82,9 @@ class ToDoListViewController: UITableViewController {
             print("Successs button is working!")
             
             self.itemArray.append(textStringToBeAppended.text!)
+            
+            self.defaults.setValue(self.itemArray, forKey: "ToDoListArray")
+            
             self.tableView.reloadData()
             
         }
