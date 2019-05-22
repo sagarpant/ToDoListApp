@@ -7,6 +7,8 @@
 //
 
 import UIKit
+import CoreData
+
 
 class ToDoListViewController: UITableViewController {
 
@@ -14,50 +16,33 @@ class ToDoListViewController: UITableViewController {
     
     var itemArray : [Item] = [Item]()
     //let defaults = UserDefaults.standard
-    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("toDoListItems.plist")
+//    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("toDoListItems.plist")
     
+    
+    
+    var context : NSManagedObjectContext?
     
     
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
         
+        if let delegate = UIApplication.shared.delegate as? AppDelegate {
+            context = delegate.persistentContainer.viewContext
+        }
         
-        print(dataFilePath)
+        print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
         
-        
-        let itemToAdd = Item()
-        itemToAdd.title = "First"
-        print(itemToAdd.title)
-        itemArray.append(itemToAdd)
-        
-        let itemToAdd1 = Item()
-        itemToAdd1.title = "Second"
-        itemArray.append(itemToAdd1)
-        
-        let itemToAdd2 = Item()
-        itemToAdd2.title = "Third"
-        itemArray.append(itemToAdd2)
-        
-        var itemToAdd3 = Item()
-        itemToAdd3.title = "Fourth"
-        itemArray.append(itemToAdd3)
-        
-        
-        
-      
-        
-        
-        
+       // print(dataFilePath)
+        //loadItems()
 //        if let items = defaults.array(forKey: "ToDoListArray") as? [Item] {
 //            itemArray = items
 //        }
-        
+        loadData()
     }
 
     
-    //MARK: - TABLEVIEW DATASOURCE METHODS
-    
+    //MARK: - TABLEVIEW DATASOURCE METHODS (Providing cell for a row in the table view to be displayed)
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
         let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell", for: indexPath)
@@ -76,12 +61,12 @@ class ToDoListViewController: UITableViewController {
         
     }
     
+    //MARK: - Number of rows in the table view
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return itemArray.count
     }
     
-    //MARK: - When a table view cell gets selected
-    
+    //MARK: - When a table view cell gets selected (Did select row at method)
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         
         
@@ -94,18 +79,18 @@ class ToDoListViewController: UITableViewController {
         
         
        
+        saveData()
+//        let encoder  = PropertyListEncoder()
+//        do{
+//            let data = try encoder.encode(itemArray)
+//            try data.write(to: dataFilePath!)
+//
+//        }
+//        catch{
+//            print(error)
+//        }
         
-        let encoder  = PropertyListEncoder()
-        do{
-            let data = try encoder.encode(itemArray)
-            try data.write(to: dataFilePath!)
-            
-        }
-        catch{
-            print(error)
-        }
-        
-        tableView.reloadData()
+//        tableView.reloadData()
         
     }
     
@@ -122,21 +107,29 @@ class ToDoListViewController: UITableViewController {
         var action = UIAlertAction(title: "Add items", style: .default){ (a) in
             print("Successs button is working!")
             
-            var itemToBeAdded = Item()
-            
-            itemToBeAdded.title = textStringToBeAppended.text!
-            self.itemArray.append(itemToBeAdded)
-            
-            let encoder = PropertyListEncoder()
-            
-            do{
-                let data = try encoder.encode(self.itemArray)
-                try data.write(to: self.dataFilePath!)
-            }
-            catch{
-                print(error)
+            if let context = self.context {
+                let itemToBeAdded = Item(context: context)
+                itemToBeAdded.done = false
+                itemToBeAdded.title = textStringToBeAppended.text!
+                self.itemArray.append(itemToBeAdded)
             }
             
+//            let encoder = PropertyListEncoder()
+//
+//            do{
+//                let data = try? encoder.encode(self.itemArray)
+//                try data!.write(to: self.dataFilePath!)
+//            }
+//            catch{
+//                print(error)
+//            }
+            
+//            let itemToBeAddedNew = Item(context: self.context)
+            
+            
+            
+            self.saveData()
+            self.loadData()
             self.tableView.reloadData()
             
         }
@@ -158,16 +151,71 @@ class ToDoListViewController: UITableViewController {
     }
     
     
+//    func saveData(){
+//        let encoder = PropertyListEncoder()
+//        do{
+//            let data = try encoder.encode(itemArray)
+//            try data.write(to: dataFilePath!)
+//        }
+//        catch{
+//            print(error)
+//        }
+//    }
+    
+    
+    //Mark:- Save Data using core data function save data
+    
     func saveData(){
-        let encoder = PropertyListEncoder()
         do{
-            let data = try encoder.encode(itemArray)
-            try data.write(to: dataFilePath!)
+            
+        try context?.save()
         }
         catch{
             print(error)
         }
+        tableView.reloadData()
     }
+    
+    
+    
+    
+    
+//
+//    func loadItems(){
+//
+//        if let data = try? Data(contentsOf: dataFilePath!){
+//            let decoder = PropertyListDecoder()
+//
+//            do{
+//                itemArray = try decoder.decode([Item].self, from: data)
+//            }
+//            catch{
+//                print(error)
+//            }
+//
+//
+//
+//        }
+//
+//    }
+//
+    
+    
+    //MARK:- Fetch data from the database to the itemsarray using NSFETCHREQUEST (COREDATA)
+    
+    func loadData(){
+        let request : NSFetchRequest<Item> = Item.fetchRequest()
+        
+        do{
+            itemArray = try context!.fetch(request)
+            print(itemArray)
+        }
+        catch{
+            print("Error in fetching the request in loadData method \(error)")
+        }
+        
+    }
+    
     
 }
 
